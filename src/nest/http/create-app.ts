@@ -30,6 +30,7 @@ export async function createApp(
   const {
     useGlobalPipes,
     useGlobalGuards,
+
     // useGlobalInterceptors,
     // useGlobalFilters,
   } = registerRoutes(app, builtRoutes);
