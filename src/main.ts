@@ -1,9 +1,15 @@
-import 'reflect-metadata';
-import express from 'express';
+import { AppModule } from "./app.module";
+import { createApp } from "./nest/http/create-app";
+import { TrimPipe } from "./apps/pipes/trim-pipe";
+import { BlockHeaderGuard } from "./apps/guard/block-header.guard";
 
-const app = express();
-app.use(express.json());
+async function main() {
+  const app = await createApp(AppModule);
+  app.useGlobalPipes([TrimPipe]);
+  app.useGlobalGuards([BlockHeaderGuard])
+  app.listen(8080, () => {
+    console.log("Running on 8080");
+  });
+}
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
-
-app.listen(8080, () => console.log('running on http://localhost:8080'));
+main();
