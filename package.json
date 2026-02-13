@@ -23,7 +23,8 @@
   "homepage": "https://github.com/Liubert/min-nest#readme",
   "dependencies": {
     "express": "^5.2.1",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

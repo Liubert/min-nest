@@ -5,9 +5,16 @@ import { router } from "../pipeline/router";
 export function registerRoutes(app: any, routes: BuiltRoute[]) {
   const globalPipes: PipeClass[] = [];
   const globalGuards: any[] = [];
+  const globalInterceptors: any[] = [];
+  const globalFilters: any[] = [];
 
   const useGlobalPipes = (pipes: PipeClass[]) => globalPipes.push(...(pipes ?? []));
   const useGlobalGuards = (guards: any[]) => globalGuards.push(...(guards ?? []));
+
+  const useGlobalInterceptors = (interceptors: any[]) =>
+      globalInterceptors.push(...(interceptors ?? []));
+  const useGlobalFilters = (filters: any[]) => globalFilters.push(...(filters ?? []));
+
 
   for (const r of routes) {
     console.log(
@@ -15,7 +22,8 @@ export function registerRoutes(app: any, routes: BuiltRoute[]) {
             r.handlerName,
         )}`,
     );
-
+    const handler = r.controllerInstance[r.handlerName].bind(r.controllerInstance);
+    const handlerRef = r.controllerInstance[r.handlerName];
     const expressMethod = r.method.toLowerCase();
     if (typeof app[expressMethod] !== "function") {
       throw new Error(`[APP] Unsupported HTTP method: ${r.method} (no app.${expressMethod}())`);
@@ -35,14 +43,21 @@ export function registerRoutes(app: any, routes: BuiltRoute[]) {
         controllerCtor: r.controllerCtor,
         controllerInstance: r.controllerInstance,
         handlerName: r.handlerName,
+        handler,
+        handlerRef,
         globalPipes,
         globalGuards,
+        globalInterceptors,
+        globalFilters,
       });
+
     });
   }
 
   return {
     useGlobalPipes,
     useGlobalGuards,
+    useGlobalInterceptors,
+    useGlobalFilters,
   };
 }

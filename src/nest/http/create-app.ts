@@ -9,6 +9,8 @@ export type Type<T = any> = new (...args: any[]) => T;
 export interface GlobalConfigApi {
   useGlobalPipes(pipes: Type[]): void;
   useGlobalGuards(guards: Type[]): void;
+  useGlobalInterceptors(interceptors: Type[]): void;
+  useGlobalFilters(filters: Type[]): void;
 }
 
 export type NestLikeApp = Express & GlobalConfigApi;
@@ -30,14 +32,15 @@ export async function createApp(
   const {
     useGlobalPipes,
     useGlobalGuards,
-
-    // useGlobalInterceptors,
-    // useGlobalFilters,
+    useGlobalInterceptors,
+    useGlobalFilters,
   } = registerRoutes(app, builtRoutes);
 
   const nestApp: NestLikeApp = Object.assign(app, {
     useGlobalPipes,
     useGlobalGuards,
+    useGlobalInterceptors,
+    useGlobalFilters,
   });
 
   return nestApp;

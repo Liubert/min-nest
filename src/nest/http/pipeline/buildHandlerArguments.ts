@@ -1,4 +1,4 @@
-import { RequestData, RouteLifecycleContext } from "../types";
+import { ParamContext, RequestData, RouteLifecycleContext } from "../types";
 import { getParamPipesMeta } from "../../decorators";
 import { runPipesForParam } from "./lifecycle/runPipes";
 
@@ -49,11 +49,20 @@ async function resolveArgValueWithPipes(
 
     console.log(`  -> Param[${index}] Running Pipe Pipeline...`);
 
+    const pipeCtx: ParamContext = {
+        ...reqData,
+        req: ctx.req,
+        controller: ctx.controllerCtor,
+        handlerName: ctx.handlerName,
+        paramIndex: index,
+        key: firstDecorator.key ?? "",
+    };
+
     return runPipesForParam(
         ctx.controllerCtor,
         ctx.handlerName,
         index,
-        { ...reqData, key: firstDecorator.key },
+        pipeCtx,
         rawValue,
         ctx.globalPipes ?? [],
     );

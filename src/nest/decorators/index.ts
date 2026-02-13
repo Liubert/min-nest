@@ -16,3 +16,9 @@ export * from "./use-guards";
 // ── di ───────────────────────────────────────
 export * from "./inject.decorator";
 export * from "./module";
+
+// ── interceptors ───────────────────────────────────────
+export * from "./use-interceptor.decorator";
+
+// ── filters ───────────────────────────────────────
+export * from "./use-filter.decorator";

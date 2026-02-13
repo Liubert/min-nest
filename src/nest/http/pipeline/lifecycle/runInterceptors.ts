@@ -1,42 +1,41 @@
 import { Container } from "../../../di-container";
-import { RequestTimeInterceptor } from "../../../../apps/interceptors/request-time.interceptor";
-import { RouteLifecycleContext } from "../../types";
+import { RouteLifecycleContext, NestInterceptor } from "../../types";
+import { getUseInterceptors } from "../../../decorators/use-interceptor.decorator";
 
-const globalInterceptors = [Container.resolve(RequestTimeInterceptor)];
+function resolveInterceptors(ctx: RouteLifecycleContext): NestInterceptor[] {
+  const global = ctx.globalInterceptors ?? [];
+  const controllerLevel = getUseInterceptors(ctx.controllerCtor) ?? [];
+  const methodLevel = getUseInterceptors(ctx.handlerRef) ?? [];
 
-export async function runInterceptorsBefore(
-  ctx: RouteLifecycleContext,
-): Promise<void> {
-  console.log(`[INTERCEPTOR] BEFORE: count=${globalInterceptors.length}`);
+  const list = [...global, ...controllerLevel, ...methodLevel];
 
-  for (const interceptor of globalInterceptors) {
+  return list.map((it: any) =>
+      typeof it === "function" ? Container.resolve(it) : it
+  );
+}
+
+export async function runInterceptorsBefore(ctx: RouteLifecycleContext) {
+  const interceptors = resolveInterceptors(ctx);
+
+  for (const interceptor of interceptors) {
     if (interceptor.before) {
-      console.log(`[INTERCEPTOR] BEFORE -> ${interceptor.constructor.name}`);
       await interceptor.before(ctx);
-    } else {
-      console.log(
-        `[INTERCEPTOR] BEFORE -> ${interceptor.constructor.name} (no before)`,
-      );
     }
   }
 }
 
 export async function runInterceptorsAfter(
-  ctx: RouteLifecycleContext,
-  result: any,
-): Promise<any> {
-  console.log(`[INTERCEPTOR] AFTER: count=${globalInterceptors.length}`);
+    ctx: RouteLifecycleContext,
+    result: any
+) {
+  const interceptors = resolveInterceptors(ctx);
 
-  for (let i = globalInterceptors.length - 1; i >= 0; i--) {
-    const interceptor = globalInterceptors[i];
+  for (let i = interceptors.length - 1; i >= 0; i--) {
+    const interceptor = interceptors[i];
     if (interceptor.after) {
-      console.log(`[INTERCEPTOR] AFTER -> ${interceptor.constructor.name}`);
       result = await interceptor.after(result, ctx);
-    } else {
-      console.log(
-        `[INTERCEPTOR] AFTER -> ${interceptor.constructor.name} (no after)`,
-      );
     }
   }
+
   return result;
 }

@@ -1,10 +1,10 @@
 import { Container } from "../../../di-container";
-import { RequestData, PipeClass } from "../../types";
+import { ParamContext, PipeClass } from "../../types";
 import { getParamPipesMeta } from "../../../decorators/param";
 import { getUsePipes, getParamUsePipes } from "../../../decorators/use-pipe.decorator";
 
 type PipeInstance = {
-  transform: (value: any, ctx: RequestData) => any | Promise<any>;
+  transform: (value: any, ctx: ParamContext) => any | Promise<any>;
 };
 
 type PipeType = PipeClass | PipeInstance;
@@ -16,11 +16,7 @@ function resolvePipe(pipe: PipeType): PipeInstance {
   return pipe;
 }
 
-async function applyPipes(
-    pipes: PipeType[],
-    value: any,
-    ctx: RequestData,
-) {
+async function applyPipes(pipes: PipeType[], value: any, ctx: ParamContext) {
   for (const pipe of pipes) {
     value = await resolvePipe(pipe).transform(value, ctx);
   }
@@ -40,31 +36,27 @@ export async function runPipesForParam(
     controllerCtor: Function,
     methodName: string | symbol,
     paramIndex: number,
-    ctx: RequestData,
+    ctx: ParamContext,
     initialValue: any,
-    globalPipes: PipeType[] = [],
+    globalPipes: PipeType[] = []
 ) {
   // ---- PARAM METADATA (@Param, @Query, @Body) ----
-  const paramMetaAll =
-      getParamPipesMeta(controllerCtor.prototype, methodName) || {};
+  const paramMetaAll = getParamPipesMeta(controllerCtor.prototype, methodName) || {};
   const paramMeta = paramMetaAll[paramIndex] || [];
 
   // ---- @UsePipe metadata ----
   const controllerPipes = (getUsePipes(controllerCtor) ?? []) as PipeType[];
 
-  const methodPipes = (getUsePipes(
-      controllerCtor.prototype,
-      methodName,
-  ) ?? []) as PipeType[];
+  const methodPipes = (getUsePipes(controllerCtor.prototype, methodName) ?? []) as PipeType[];
 
   const paramUsePipes = (getParamUsePipes(
       controllerCtor.prototype,
       methodName,
-      paramIndex,
+      paramIndex
   ) ?? []) as PipeType[];
 
   // key comes from first param decorator if exists
-  ctx.key = paramMeta?.[0]?.key ?? "";
+  ctx.key = paramMeta?.[0]?.key ?? ctx.key;
 
   let value = initialValue;
 
@@ -73,8 +65,8 @@ export async function runPipesForParam(
 
   // 2) Controller-level pipes
   value = await applyPipes(controllerPipes, value, ctx);
-  //
-  // // 3) Method-level pipes
+
+  // 3) Method-level pipes
   value = await applyPipes(methodPipes, value, ctx);
 
   // 4) Param-level @UsePipe

@@ -13,8 +13,20 @@ import {
   Get,
   Post,
   Controller,
-  UsePipe,
+  UsePipe, UseInterceptor,
 } from "../../nest/decorators";
+import { z } from "zod";
+import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
+import {RequestTimeInterceptor} from "../interceptors/request-time.interceptor";
+
+const paramsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
+const querySchema = z.object({
+  name: z.string().min(3).transform((s) => s.trim()),
+  age: z.coerce.number().int().min(0),
+});
 
 @Injectable()
 @Controller("/users")
@@ -23,11 +35,11 @@ export class UserController {
 
   @Post("/:id")
   update(
-      @UsePipe(ParseIntPipe) @Param("id") id: number,
-      @UsePipe(TrimPipe, StringNotEmptyPipe) @Query("name") name: string,
+      @UsePipe(new ZodValidationPipe(paramsSchema)) @Param() { id }: { id: number },
+      @UsePipe(new ZodValidationPipe(querySchema)) @Query() { name, age }: { name: string; age: number },
       @Body() body: any,
   ) {
-    return { id, name, body };
+    return { id, name, age, body };
   }
 
   @Get("/")
@@ -62,7 +74,8 @@ export class UserController {
     });
   }
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
+  @UseInterceptor(RequestTimeInterceptor)
   @Get("/me")
   getMe(
       // @UsePipe(TrimPipe, StringNotEmptyPipe) @Param("name") name: string,

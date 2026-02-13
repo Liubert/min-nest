@@ -12,13 +12,23 @@ export type RouteLifecycleContext = {
   req: any;
   res: any;
   next: (err?: any) => void;
+  handler: Function;
+  handlerRef: Function;
+
   controllerInstance: any;
   controllerCtor: any;
   handlerName: string | symbol;
 
   globalPipes?: PipeClass[];
   globalGuards?: any[];
+
+  globalInterceptors?: any[];
+  globalFilters?: any[];
 };
+
+export interface ExceptionFilter {
+  catch(err: any, ctx: any): any | Promise<any>;
+}
 
 export type RequestData = {
   key?: string;
